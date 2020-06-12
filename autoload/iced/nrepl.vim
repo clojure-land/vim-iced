@@ -533,6 +533,10 @@ function! iced#nrepl#eval(code, ...) abort
         \ 'callback': Callback,
         \ }
 
+  if has_key(option, 'ns')
+    let msg['ns'] = option['ns']
+  endif
+
   if has_key(option, 'use-printer?')
     let msg['nrepl.middleware.print/print'] = get(s:printer_dict, g:iced#nrepl#printer, s:printer_dict['default'])
   endif
