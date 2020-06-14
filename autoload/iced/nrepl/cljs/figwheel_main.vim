@@ -13,8 +13,9 @@ function! s:env_code() abort
 endfunction
 
 function! s:post_code() abort
+  let code = printf('(figwheel.main.api/stop "%s")', s:build_id)
   let s:build_id = ''
-  return printf('(figwheel.main.api/stop "%s")', s:build_id)
+  return code
 endfunction
 
 function! iced#nrepl#cljs#figwheel_main#get_env(options) abort

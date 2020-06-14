@@ -20,7 +20,7 @@ function! s:set_cljs_session(original_cljs_session) abort
 
   call iced#nrepl#set_session('cljs', a:original_cljs_session)
   call iced#nrepl#set_session('clj', cloned_cljs_session)
-  return iced#nrepl#eval#code(s:quit_code, {'session': 'clj', 'ignore_session_validity': v:true})
+  return iced#nrepl#eval#code(s:quit_code, {'session': 'clj', 'ignore_session_validity': v:true, 'ignore_ns': v:true})
 endfunction
 
 function! s:unset_cljs_session() abort
@@ -45,20 +45,26 @@ function! iced#nrepl#cljs#check_switching_session(eval_resp, evaluated_code) abo
   let ext = expand('%:e')
 
   if eq_to_clj_session && ns ==# g:iced#nrepl#init_cljs_ns
+    " Switch to CLJS session from CLJ session
     let p = s:set_cljs_session(eval_session)
     if ext !=# 'clj'
       call iced#nrepl#change_current_session('cljs')
-      call iced#nrepl#ns#in()
+      " FIXME
+       call iced#nrepl#ns#in()
       call iced#hook#run('session_switched', {'session': 'cljs'})
     endif
 
     call iced#message#info('started_cljs_repl')
     return p
+
   elseif eq_to_cljs_session
       \ && !get(s:using_env, 'ignore-quit-detecting', v:false)
       \ && a:evaluated_code ==# s:quit_code
+    " Quit CLJS session
     call s:unset_cljs_session()
     call iced#nrepl#change_current_session('clj')
+
+    " FIXME
     if ext !=# 'cljs'
       call iced#nrepl#ns#in()
     endif
@@ -103,7 +109,7 @@ function! iced#nrepl#cljs#start_repl(code, ...) abort
     else
       let code = printf('(do %s (cider.piggieback/cljs-repl %s))', pre_code, a:code)
     endif
-    call iced#nrepl#eval#code(code, {'ignore_session_validity': v:true})
+    call iced#nrepl#eval#code(code, {'ignore_session_validity': v:true, 'ignore_ns': v:true})
     return v:true
   endif
   return v:false
@@ -111,12 +117,12 @@ endfunction
 
 function! iced#nrepl#cljs#stop_repl(...) abort
   if iced#nrepl#cljs_session() !=# ''
-    call iced#nrepl#eval#code(s:quit_code, {'session': 'cljs', 'ignore_session_validity': v:true})
+    call iced#nrepl#eval#code(s:quit_code, {'session': 'cljs', 'ignore_session_validity': v:true, 'ignore_ns': v:true})
 
     let opt = get(a:, 1, {})
     let post_code = get(opt, 'post', '')
     if !empty(post_code)
-      call iced#nrepl#eval#code(post_code, {'ignore_session_validity': v:true})
+      call iced#nrepl#eval#code(post_code, {'ignore_session_validity': v:true, 'ignore_ns': v:true})
     endif
     return v:true
   endif
